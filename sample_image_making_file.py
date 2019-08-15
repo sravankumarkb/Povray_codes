@@ -24,7 +24,7 @@ for cont in contcars:
   name= cont+'_OOH_formation_from_bridge_OH_side'
   atoms = read(cont,format='vasp')
   atoms = atoms*(1,1,1)
-  colors=[None]*len(atoms)
+  colors=[None]*len(atoms) #creating colors list
 
 
   O2=[75,76]
