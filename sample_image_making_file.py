@@ -6,21 +6,20 @@ import os, glob, subprocess
 from ase.io import pov
 import numpy as np
 
+# reading the vasp files (contcars). You can edit the below line to suit the names you have for your vasp files
 contcars = ['CONTCAR_IS','CONTCAR_TS','CONTCAR_FS']
+
+# defining the box, x and y are the centers of the box
 x = -8
 y = 25
 box = 12
 res = 80     # Resolution
-top='-90z'
+
+# defining the views, you can create your own view by looking at the "view > rotate" in the ase-gui
+top='-90z'   
 side='90x,0y,-180z'
 
-#rad = {}
-#rad['C'] = 0.6
-#rad['Pd'] = 1.1
-#rad['Zr'] = 1.2
-#rad['H'] = 0.3
-#rad['O'] = 0.6
-
+# looping through the vasp files (contcars)
 for cont in contcars:
   name= cont+'_OOH_formation_from_bridge_OH_side'
   atoms = read(cont,format='vasp')
@@ -36,12 +35,15 @@ for cont in contcars:
   H2=[3,4]
   donot_show=[1,3,4,74,0,73]
 
+# creating radii dictionary
   rad={}
   rad['Ti']=0.2
   rad['O']=0.1
   rad['H']=0.28*0.7
   rad['Au']=0.2
   radii=np.zeros(len(atoms))
+
+# assigning radii and colors to the atoms in vasp files (contcars)
   for i in range(0,int(len(atoms))):
 	if (atoms[i].symbol=='H'):
 		colors[i]=(1,1,1)       # Hydrogen
@@ -78,8 +80,10 @@ for cont in contcars:
 	if i in donot_show:
 		colors[i]=(1,1,1,0,1)	#transperent
 
+# getting the bond_pairs list from pov class		
   bond_pairs=pov.get_bondpairs(atoms,radius=0.9)
 
+# removing undesired bonds
   bonds_to_be_removed=[]
   for i in range(0,len(bond_pairs)-1):
         if (bond_pairs[i][0]== 73 and bond_pairs[i][1]==95):bonds_to_be_removed.append(i)
@@ -91,13 +95,16 @@ for cont in contcars:
         if(i not in bonds_to_be_removed): bond_pairs_updated.append(bond_pairs[i])
   bond_pairs=bond_pairs_updated
 
+# adding additional bond pairs
   bond_pairs.append((11, 62, [0, 0, 0]))
   bond_pairs.append((14, 52, [0, 0, 0]))
   bond_pairs.append((17, 42, [0, 0, 0]))
 
-  #h_h = atoms.get_distance(9,10)
-  #radii=0.7
+# writing the .pov file, make sure to check the rotation (view)
+	
   write(name+'.pov',atoms*(1,1,1),format='pov',rotation=side, radii=radii, bondatoms=bond_pairs, bbox=(x-box/2.,y-box/2.,x+box/2.,y+box/2.),run_povray=False,canvas_width=box*res,colors=colors,transparent=True,display=False,pause=False)
+
+# removing the shadows in the picture
   fo=open(name+'.pov',"r")
   line=fo.readlines()
   line.insert(10,'shadowless')
@@ -106,4 +113,5 @@ for cont in contcars:
   line = "".join(line)
   f.write(line)
   f.close()
+# below code is for running povray on the terminal
   subprocess.call(["povray",name+".ini"])
